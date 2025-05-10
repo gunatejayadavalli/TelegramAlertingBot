@@ -119,6 +119,11 @@ async def handle_commands(event):
                 logging.info("Bot has not started.")
                 await notify("Bot has not started.")
 
+def pattern_to_regex(keyword):
+    cleaned = keyword.replace('*', '')
+    regex_parts = [f"{re.escape(c)}+" for c in cleaned if c.isalnum()]
+    return ".*".join(regex_parts)
+
 @client.on(events.NewMessage())
 async def handler(event):
     if not config['is_running']:
@@ -133,7 +138,11 @@ async def handler(event):
     if not message:
         return
     logging.info(f'Message received from monitored channel: {message}')
-    matched_keywords = [kw for kw in config['keywords'] if kw.lower() in message.lower()]
+    matched_keywords = []
+    for kw in config['keywords']:
+        pattern = pattern_to_regex(kw.lower())
+        if re.search(pattern, message.lower()):
+            matched_keywords.append(kw)
     if matched_keywords:
         logging.info(f'Keywords matched: {matched_keywords}. Forwarding message...')
         try:
