@@ -1,0 +1,10 @@
+sudo systemctl start telegramalertbot.service
+sudo systemctl restart telegramalertbot.service
+python3 TelegramAlertingBot/app.py
+
+sudo systemctl enable telegramalertbot.service
+
+
+journalctl -u telegramalertbot.service -f
+
+tail -f TelegramAlertingBot/alertbotlogs.log
