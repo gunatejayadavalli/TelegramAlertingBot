@@ -119,10 +119,28 @@ async def handle_commands(event):
                 logging.info("Bot has not started.")
                 await notify("Bot has not started.")
 
-def pattern_to_regex(keyword):
-    cleaned = keyword.replace('*', '')
-    regex_parts = [f"{re.escape(c)}+" for c in cleaned if c.isalnum()]
-    return ".*".join(regex_parts)
+def is_pairwise_match(pattern, message):
+    pairs = pattern.split("&&")
+    idx = 0
+    msg = message.upper()
+    for pair in pairs:
+        if len(pair) != 2:
+            return False
+        found = False
+        while idx < len(msg) - 1:
+            if msg[idx] == pair[0] and msg[idx + 1] == pair[1]:
+                found = True
+                break
+            idx += 1
+        if not found:
+            return False
+        idx += 1
+    return True
+
+def wildcard_to_regex(pattern):
+    parts = pattern.split("*")
+    regex_parts = [re.escape(c) + "+" for c in parts if c]
+    return ".*?".join(regex_parts)
 
 @client.on(events.NewMessage())
 async def handler(event):
@@ -139,10 +157,14 @@ async def handler(event):
         return
     logging.info(f'Message received from monitored channel: {message}')
     matched_keywords = []
-    for kw in config['keywords']:
-        pattern = pattern_to_regex(kw.lower())
-        if re.search(pattern, message.lower()):
-            matched_keywords.append(kw)
+    for kw in config["keywords"]:
+        if "&&" in kw:
+            if is_pairwise_match(kw, message):
+                matched_keywords.append(kw)
+        else:
+            regex = wildcard_to_regex(kw.upper())
+            if re.search(regex, message.upper()):
+                matched_keywords.append(kw)
     if matched_keywords:
         logging.info(f'Keywords matched: {matched_keywords}. Forwarding message...')
         try:

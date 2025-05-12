@@ -4,7 +4,12 @@ python3 TelegramAlertingBot/app.py
 
 sudo systemctl enable telegramalertbot.service
 
+sudo systemctl stop telegramalertbot.service
+
 
 journalctl -u telegramalertbot.service -f
 
 tail -f TelegramAlertingBot/alertbotlogs.log
+
+git reset --hard HEAD
+git pull origin main
