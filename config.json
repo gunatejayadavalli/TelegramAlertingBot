@@ -1,10 +1,13 @@
 {
   "api_id": "24325008",
   "api_hash": "032b2c57e476754be4b7bbc951483227",
-  "session_name": "user_session",
+  "bot_token": "7816528309:AAHAwsA8vGffVgjZhAuZB2jb-xW7QO2PE5U",
+  "user_session_name": "user_session",
+  "bot_session_name": "bot_session",
   "is_running": true,
   "admins": [
-    7560332047
+    7560332047,
+    615737665
   ],
   "source_channels": [
     2559198547
@@ -16,6 +19,5 @@
     "BI&&IG&&LO&&OT"
   ],
   "destination_channel": "dealsbyguna",
-  "log_channel": "keyword_based_alert_bot",
   "config_bot": "keyword_based_alert_bot"
 }

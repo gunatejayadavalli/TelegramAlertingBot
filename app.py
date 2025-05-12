@@ -23,34 +23,33 @@ logging.basicConfig(
     ]
 )
 
-client = TelegramClient(config["session_name"], config["api_id"], config["api_hash"])
+user = TelegramClient(config["user_session_name"], config["api_id"], config["api_hash"])
+bot = TelegramClient(config["bot_session_name"], config["api_id"], config["api_hash"]).start(bot_token=config["bot_token"])
 
 recent_message_ids = deque(maxlen=1000)
 
 async def notify(message, parse_mode=None):
-    await client.send_message(config['config_bot'], message, parse_mode=parse_mode)
+    await bot.send_message(config['destination_channel'], message, parse_mode=parse_mode)
 
-
-@client.on(events.NewMessage(chats=config['config_bot']))
+@bot.on(events.NewMessage)
 async def handle_commands(event):
     command_text = event.message.message
     sender = await event.get_sender()
-    print('Sender is :',sender.id)
     if sender.id not in config['admins']:
-        logging.info("You are not authorized to control this bot.")
-        await notify("You are not authorized to control this bot.")
+        logging.info("You are not authorized to use this bot.")
+        await event.reply("You are not authorized to use this bot.")
     else:
         if command_text.startswith('/start'):
             config['is_running'] = True
             save_config(config)
             logging.info("Bot service started.")
-            await notify("Bot service started.")
+            await event.reply("Bot service started.")
 
         elif command_text.startswith('/stop'):
             config['is_running'] = False
             save_config(config)
             logging.info("Bot service stopped.")
-            await notify("Bot service stopped.")
+            await event.reply("Bot service stopped.")
 
         elif command_text.startswith('/setchannels'):
             if config['is_running']:
@@ -61,22 +60,22 @@ async def handle_commands(event):
                     save_config(config)
                     for username in channel_usernames:
                         try:
-                            entity = await client.get_entity(username)
+                            entity = await bot.get_entity(username)
                             config['source_channels'].append(entity.id)
                             save_config(config)
                             logging.info(f"Resolved {username} to chat_id {entity.id}")
                         except Exception as e:
                             logging.error(f"Failed to resolve {username}: {e}")
-                            await notify(f"Failed to resolve {username}: {e}")
+                            await event.reply(f"Failed to resolve {username}: {e}")
 
                     logging.info(f"Monitoring channels: {', '.join(channel_usernames)}")
-                    await notify(f"Monitoring channels: {', '.join(channel_usernames)}")
+                    await event.reply(f"Monitoring channels: {', '.join(channel_usernames)}")
                 else:
                     logging.error("Channels list is empty. Please resend the channels list in the format /setchannels <channel1> <channel2>")
-                    await notify("Channels list is empty. Please resend the channels list in the format <b>/setchannels '&lt;channel1&gt;' '&lt;channel2&gt;'</b>", parse_mode='HTML')
+                    await event.reply("Channels list is empty. Please resend the channels list in the format <b>/setchannels '&lt;channel1&gt;' '&lt;channel2&gt;'</b>", parse_mode='HTML')
             else:
                 logging.error("Please start the bot service using /start.")
-                await notify("Please start the bot service using /start.")
+                await event.reply("Please start the bot service using /start.")
 
         elif command_text.startswith('/setkeywords'):
             if config['is_running'] and len(config['source_channels']) > 0:
@@ -85,17 +84,17 @@ async def handle_commands(event):
                     config['keywords'] = keywords
                     save_config(config)
                     logging.info(f"Searching for keywords: {', '.join(config['keywords'])}")
-                    await notify(f"Searching for keywords: {', '.join(config['keywords'])}")
+                    await event.reply(f"Searching for keywords: {', '.join(config['keywords'])}")
                 else:
                     logging.error("Keywords list is empty. Please resend the keywords list in the format /setkeywords '<keyword1>' '<keyword2>'")
-                    await notify("Keywords list is empty. Please resend the keywords list in the format <b>/setkeywords '&lt;keyword1&gt;' '&lt;keyword2&gt;'</b>", parse_mode='HTML')
+                    await event.reply("Keywords list is empty. Please resend the keywords list in the format <b>/setkeywords '&lt;keyword1&gt;' '&lt;keyword2&gt;'</b>", parse_mode='HTML')
 
             elif not config['is_running']:
                 logging.error("Please start the bot service first using /start.")
-                await notify("Please start the bot service first using /start.")
+                await event.reply("Please start the bot service first using /start.")
             elif config['is_running'] and len(config['source_channels']) == 0:
                 logging.error("Please set the monitoring channels first using /setchannels.")
-                await notify("Please set the monitoring channels first using /setchannels.")
+                await event.reply("Please set the monitoring channels first using /setchannels.")
 
         elif command_text.startswith('/clear'):
             config['source_channels'].clear()
@@ -103,21 +102,21 @@ async def handle_commands(event):
             config['keywords'].clear()
             save_config(config)
             logging.info("Cleared all monitored channels and keywords.")
-            await notify("Cleared all monitored channels and keywords.")
+            await event.reply("Cleared all monitored channels and keywords.")
 
         elif command_text.startswith('/show'):
             channels_list = ', '.join(config['source_channel_names']) if config['source_channel_names'] else "No channels set."
             keywords_list = ', '.join(config['keywords']) if config['keywords'] else "No keywords set."
             logging.info(f"Channels: {channels_list}\nKeywords: {keywords_list}")
-            await notify(f"Channels: {channels_list}\nKeywords: {keywords_list}")
+            await event.reply(f"Channels: {channels_list}\nKeywords: {keywords_list}")
 
         elif command_text.startswith('/status'):
             if config['is_running']:
                 logging.info("Bot is running.")
-                await notify("Bot is running.")
+                await event.reply("Bot is running.")
             else:
                 logging.info("Bot is not running.")
-                await notify("Bot is not running.")
+                await event.reply("Bot is not running.")
 
 def is_pairwise_match(pattern, message):
     pairs = pattern.split("&&")
@@ -142,7 +141,7 @@ def wildcard_to_regex(pattern):
     regex_parts = [re.escape(c) + "+" for c in parts if c]
     return ".*?".join(regex_parts)
 
-@client.on(events.NewMessage())
+@user.on(events.NewMessage())
 async def handler(event):
     if not config['is_running']:
         return
@@ -168,16 +167,16 @@ async def handler(event):
     if matched_keywords:
         logging.info(f'Keywords matched: {matched_keywords}. Forwarding message...')
         try:
-            await client.forward_messages(config['destination_channel'], event.message)
+            await bot.forward_messages(config['destination_channel'], event.message)
         except Exception as e:
-            logging.error(f"Failed to forward message: {e}")
-            await notify(f"Failed to forward message from {channel_id}: {e}")
+            logging.error(f"Forwarding failed for message from {channel_id}: {e}")
+            await notify(f"Forwarding failed for message from {channel_id}: {e}")
 
 async def main():
-    await client.start()
+    await user.start()
     logging.info("Bot is running...")
     try:
-        await client.run_until_disconnected()
+        await user.run_until_disconnected()
     except Exception as e:
         logging.error(f"An error occurred: {e}")
         await notify(f"Error: {e}")
@@ -185,6 +184,5 @@ async def main():
         logging.info("Bot is shutting down.")
         await notify("Bot is shutting down.")
 
-
-with client:
-    client.loop.run_until_complete(main())
+with user:
+    user.loop.run_until_complete(main())
