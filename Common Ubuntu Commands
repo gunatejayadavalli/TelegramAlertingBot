@@ -11,6 +11,8 @@ journalctl -u telegramalertbot.service -f
 
 tail -f TelegramAlertingBot/alertbotlogs.log
 
+cd TelegramAlertingBot
+
 git reset --hard HEAD
 git pull origin main
 
