@@ -6,7 +6,7 @@ sudo systemctl enable telegramalertbot.service
 
 sudo systemctl stop telegramalertbot.service
 
-
+sudo systemctl status telegramalertbot.service
 journalctl -u telegramalertbot.service -f
 
 tail -f TelegramAlertingBot/alertbotlogs.log
