@@ -1,8 +1,8 @@
-import re,json,logging
+import re,json,logging,sys
 from telethon import TelegramClient, events
 from collections import deque
 
-CONFIG_PATH = "config.json"
+CONFIG_PATH = "/home/ubuntu/TelegramAlertingBot/config.json"
 
 def load_config():
     with open(CONFIG_PATH, "r") as f:
@@ -14,12 +14,15 @@ def save_config(config):
 
 config = load_config()
 
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("alertbotlogs.log"),
-        logging.StreamHandler()
+        logging.FileHandler("/home/ubuntu/TelegramAlertingBot/alertbotlogs.log"),
+        logging.StreamHandler(sys.stdout)
     ]
 )
 
