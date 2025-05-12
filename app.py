@@ -113,11 +113,11 @@ async def handle_commands(event):
 
         elif command_text.startswith('/status'):
             if config['is_running']:
-                logging.info("Bot has started.")
-                await notify("Bot has started.")
+                logging.info("Bot is running.")
+                await notify("Bot is running.")
             else:
-                logging.info("Bot has not started.")
-                await notify("Bot has not started.")
+                logging.info("Bot is not running.")
+                await notify("Bot is not running.")
 
 def is_pairwise_match(pattern, message):
     pairs = pattern.split("&&")
