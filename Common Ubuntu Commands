@@ -18,3 +18,5 @@ git pull origin main
 
 ps aux | grep app.py
 kill -9 <PID>
+
+rm user_session.session user_session.session-journal bot_session.session bot_session.session-journal
