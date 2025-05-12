@@ -13,3 +13,6 @@ tail -f TelegramAlertingBot/alertbotlogs.log
 
 git reset --hard HEAD
 git pull origin main
+
+ps aux | grep app.py
+kill -9 <PID>
