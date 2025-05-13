@@ -20,3 +20,47 @@ ps aux | grep app.py
 kill -9 <PID>
 
 rm user_session.session user_session.session-journal bot_session.session bot_session.session-journal
+
+telegramalertbot.service (Backup)
+=================================
+
+[Unit]
+Description=Telegram Alerting Bot
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/TelegramAlertingBot
+ExecStart=/bin/bash -c '/usr/bin/python3 /home/ubuntu/TelegramAlertingBot/app.py >> /home/ubuntu/TelegramAlertingBot/alertbotlogs.log 2>&1'
+Restart=always
+RestartSec=10
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
+
+
+
+telegramalertbot.service (Current)
+=================================
+
+[Unit]
+Description=Telegram Alerting Bot
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/TelegramAlertingBot
+ExecStart=/usr/bin/python3 /home/ubuntu/TelegramAlertingBot/app.py
+Restart=always
+RestartSec=10
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
+
+# Reload systemd manager config
+sudo systemctl daemon-reload
+
+# (Optional but safe) Restart systemd binary in case of low-level changes
+sudo systemctl daemon-reexec

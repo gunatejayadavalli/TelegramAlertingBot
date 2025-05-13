@@ -1,28 +1,30 @@
-import re,json,logging,sys
+import re,json,logging,sys,os,asyncio
 from telethon import TelegramClient, events
 from collections import deque
 
-CONFIG_PATH = "/home/ubuntu/TelegramAlertingBot/config.json"
+LOG_FILE_PATH = os.getenv("TELEGRAM_ALERTING_BOT_LOG", "./alertbotlogs.log")
+CONFIG_PATH = os.getenv("TELEGRAM_ALERTING_BOT_CONFIG_PATH", "./config.json")
+
+config_lock = asyncio.Lock()
 
 def load_config():
     with open(CONFIG_PATH, "r") as f:
         return json.load(f)
 
-def save_config(config):
-    with open(CONFIG_PATH, "w") as f:
-        json.dump(config, f, indent=2)
+async def save_config(config):
+    async with config_lock:
+        with open(CONFIG_PATH, "w") as f:
+            json.dump(config, f, indent=2)
 
 config = load_config()
 
-for handler in logging.root.handlers[:]:
-    logging.root.removeHandler(handler)
+os.makedirs(os.path.dirname(LOG_FILE_PATH), exist_ok=True)
 
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("/home/ubuntu/TelegramAlertingBot/alertbotlogs.log"),
-        logging.StreamHandler(sys.stdout)
+        logging.FileHandler(LOG_FILE_PATH, mode='a')
     ]
 )
 
@@ -32,9 +34,13 @@ bot = TelegramClient(config["bot_session_name"], config["api_id"], config["api_h
 recent_message_ids = deque(maxlen=1000)
 
 async def notify(message, parse_mode=None):
-    await bot.send_message(config['destination_channel'], message, parse_mode=parse_mode)
+    try:
+        await bot.send_message(config['destination_channel'], message, parse_mode=parse_mode)
+    except Exception as e:
+        logging.error(f"Notify failed: {e}")
 
-@bot.on(events.NewMessage)
+
+@bot.on(events.NewMessage(pattern='/'))
 async def handle_commands(event):
     command_text = event.message.message
     sender = await event.get_sender()
@@ -60,17 +66,15 @@ async def handle_commands(event):
                 if len(channel_usernames) > 0:
                     config['source_channel_names'] = channel_usernames
                     config['source_channels'] = []
-                    save_config(config)
                     for username in channel_usernames:
                         try:
                             entity = await bot.get_entity(username)
                             config['source_channels'].append(entity.id)
-                            save_config(config)
                             logging.info(f"Resolved {username} to chat_id {entity.id}")
                         except Exception as e:
                             logging.error(f"Failed to resolve {username}: {e}")
                             await event.reply(f"Failed to resolve {username}: {e}")
-
+                    save_config(config)
                     logging.info(f"Monitoring channels: {', '.join(channel_usernames)}")
                     await event.reply(f"Monitoring channels: {', '.join(channel_usernames)}")
                 else:
@@ -177,15 +181,21 @@ async def handler(event):
 
 async def main():
     await user.start()
-    logging.info("Bot is running...")
+    await bot.start()
+    logging.info("Both clients running...")
+    await notify("Bot is starting...")
     try:
-        await user.run_until_disconnected()
+        await asyncio.gather(
+            user.run_until_disconnected(),
+            bot.run_until_disconnected()
+        )
     except Exception as e:
-        logging.error(f"An error occurred: {e}")
-        await notify(f"Error: {e}")
+        logging.error(f"Bot crashed: {e}")
+        await notify(f"Bot crashed: {e}")
     finally:
-        logging.info("Bot is shutting down.")
         await notify("Bot is shutting down.")
+        logging.info("Bot is shutting down.")
 
-with user:
-    user.loop.run_until_complete(main())
+if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
