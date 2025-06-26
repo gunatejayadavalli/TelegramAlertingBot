@@ -50,13 +50,13 @@ async def handle_commands(event):
     else:
         if command_text.startswith('/start'):
             config['is_running'] = True
-            save_config(config)
+            await save_config(config)
             logging.info("Bot service started.")
             await event.reply("Bot service started.")
 
         elif command_text.startswith('/stop'):
             config['is_running'] = False
-            save_config(config)
+            await save_config(config)
             logging.info("Bot service stopped.")
             await event.reply("Bot service stopped.")
 
@@ -74,7 +74,7 @@ async def handle_commands(event):
                         except Exception as e:
                             logging.error(f"Failed to resolve {username}: {e}")
                             await event.reply(f"Failed to resolve {username}: {e}")
-                    save_config(config)
+                    await save_config(config)
                     logging.info(f"Monitoring channels: {', '.join(channel_usernames)}")
                     await event.reply(f"Monitoring channels: {', '.join(channel_usernames)}")
                 else:
@@ -89,7 +89,7 @@ async def handle_commands(event):
                 keywords = re.findall(r"'(.*?)'", command_text)
                 if len(keywords) > 0:
                     config['keywords'] = keywords
-                    save_config(config)
+                    await save_config(config)
                     logging.info(f"Searching for keywords: {', '.join(config['keywords'])}")
                     await event.reply(f"Searching for keywords: {', '.join(config['keywords'])}")
                 else:
@@ -107,7 +107,7 @@ async def handle_commands(event):
             config['source_channels'].clear()
             config['source_channel_names'].clear()
             config['keywords'].clear()
-            save_config(config)
+            await save_config(config)
             logging.info("Cleared all monitored channels and keywords.")
             await event.reply("Cleared all monitored channels and keywords.")
 
