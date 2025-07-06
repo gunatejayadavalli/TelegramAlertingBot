@@ -1,14 +1,5 @@
 {
-  "api_id": "24325008",
-  "api_hash": "032b2c57e476754be4b7bbc951483227",
-  "bot_token": "7962192123:AAF3ALvQvHA0YoGgc8M28PnOO7VEnVxU0SI",
-  "user_session_name": "user_session",
-  "bot_session_name": "bot_session",
   "is_running": true,
-  "admins": [
-    7560332047,
-    615737665
-  ],
   "source_channels": [
     1251692084,
     2559198547
@@ -18,8 +9,8 @@
     "public_channel_0001"
   ],
   "keywords": [
-    "BI&&IG&&LO&&OT"
-  ],
-  "destination_channel": "dealsbyguna",
-  "config_bot": "guna_keyword_based_alerting_bot"
+    "BI&&IG&&LO&&OT",
+    "BIG LOOT",
+    "BIGLOOT"
+  ]
 }

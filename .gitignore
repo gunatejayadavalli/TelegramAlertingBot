@@ -1,0 +1,28 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+.env/
+.venv/
+venv/
+ENV/
+env/
+
+# Environment variables
+.env
+
+# Telethon session files (IMPORTANT!)
+*.session
+*.session-journal
+
+# Logs
+*.log
+
+# Config (optional)
+config.json
+
+# OS-specific
+.DS_Store
+Thumbs.db
