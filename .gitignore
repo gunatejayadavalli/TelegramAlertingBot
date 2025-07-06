@@ -19,6 +19,7 @@ env/
 
 # Logs
 *.log
+alertbotlogs.log
 
 # Config (optional)
 config.json
